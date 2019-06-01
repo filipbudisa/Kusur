@@ -15,6 +15,8 @@ public class Transfer extends Transaction {
 	@JoinColumn(name = "to_user_id")
 	private User to;
 
+	protected Transfer(){ }
+
 	public Transfer(User from, User to, double amount){
 		this.from = from;
 		this.to = to;

@@ -21,6 +21,8 @@ public class MoneyDistribution {
 	@OneToMany(mappedBy = "distribution")
 	private List<MoneyDistributionPart> parts;
 
+	protected MoneyDistribution(){ }
+
 	public MoneyDistribution(MoneyDistributionType type){
 		this.type = type;
 		parts = new ArrayList<>();

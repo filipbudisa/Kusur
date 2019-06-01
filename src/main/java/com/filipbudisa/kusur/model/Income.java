@@ -15,4 +15,6 @@ public class Income extends Transaction {
 	@OneToOne
 	@JoinColumn(name = "distribution_id")
 	private MoneyDistribution distribution;
+
+	protected Income(){ }
 }

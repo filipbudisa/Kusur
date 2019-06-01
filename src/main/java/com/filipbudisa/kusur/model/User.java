@@ -19,6 +19,8 @@ public class User {
 
 	private double balance;
 
+	protected User(){ }
+
 	public User(String name){
 		this.name = name;
 	}

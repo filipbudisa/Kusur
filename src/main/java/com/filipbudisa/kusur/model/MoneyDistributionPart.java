@@ -19,6 +19,8 @@ public class MoneyDistributionPart {
 
 	private double value;
 
+	protected MoneyDistributionPart(){ }
+
 	public MoneyDistributionPart(User user, double value){
 		this.user = user;
 		this.value = value;

@@ -25,4 +25,6 @@ public class Expense extends Transaction {
 	@OneToOne
 	@JoinColumn(name = "paying_distribution_id")
 	private MoneyDistribution payingDistribution;
+
+	protected Expense(){ }
 }
