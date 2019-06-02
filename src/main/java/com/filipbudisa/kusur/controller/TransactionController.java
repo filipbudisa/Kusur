@@ -33,6 +33,12 @@ public class TransactionController {
 	@Autowired
 	private UserRepository userRepo;
 
+	@GetMapping("/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public TransactionView getTransaction(@PathVariable Long id){
+		return new TransactionView(transactionRepo.findById(id).get());
+	}
+
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public TransactionView create(@RequestBody String body) throws Exception {
