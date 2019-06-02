@@ -1,17 +1,20 @@
 package com.filipbudisa.kusur.model;
 
+import com.fasterxml.jackson.annotation.*;
+
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
 public class Transfer extends Transaction {
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "from_user_id")
 	private User from;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "to_user_id")
 	private User to;
 

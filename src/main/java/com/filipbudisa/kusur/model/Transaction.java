@@ -3,7 +3,7 @@ package com.filipbudisa.kusur.model;
 import javax.persistence.*;
 
 @Entity
-@Inheritance
+@Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Transaction {
 
 	@Id
@@ -11,6 +11,10 @@ public abstract class Transaction {
 	private long id;
 
 	protected double amount;
+
+	public long getId(){
+		return id;
+	}
 
 	public double getAmount(){
 		return amount;

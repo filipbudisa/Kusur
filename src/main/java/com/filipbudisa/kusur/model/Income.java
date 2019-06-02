@@ -6,7 +6,7 @@ import java.util.List;
 @Entity
 public class Income extends Transaction {
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_income",
 			joinColumns = @JoinColumn(name = "income_id"),
 			inverseJoinColumns = @JoinColumn(name = "user_id"))

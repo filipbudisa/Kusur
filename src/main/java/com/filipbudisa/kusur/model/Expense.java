@@ -6,7 +6,7 @@ import java.util.List;
 @Entity
 public class Expense extends Transaction {
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_expense",
 			joinColumns = @JoinColumn(name = "expense_id"),
 			inverseJoinColumns = @JoinColumn(name = "user_id"))
@@ -16,7 +16,7 @@ public class Expense extends Transaction {
 	@JoinColumn(name = "distribution_id")
 	private MoneyDistribution distribution;
 
-	@ManyToMany
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(name = "user_paying_expense",
 			joinColumns = @JoinColumn(name = "expense_id"),
 			inverseJoinColumns = @JoinColumn(name = "user_id"))
