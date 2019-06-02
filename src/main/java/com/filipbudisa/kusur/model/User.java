@@ -5,6 +5,7 @@ import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 public class User {
@@ -18,20 +19,11 @@ public class User {
 
 	private double balance;
 
-	@OneToMany(mappedBy = "from", fetch = FetchType.LAZY)
-	private List<Transfer> sentTransfers;
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<UserIncome> incomes;
 
-	@OneToMany(mappedBy = "to", fetch = FetchType.LAZY)
-	private List<Transfer> receivedTransfers;
-
-	@ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
-	private List<Income> incomes;
-
-	@ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
-	private List<Expense> expenses;
-
-	@ManyToMany(mappedBy = "payingUsers", fetch = FetchType.LAZY)
-	private List<Expense> paidExpenses;
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<UserExpense> expenses;
 
 	protected User(){ }
 
@@ -39,19 +31,16 @@ public class User {
 		this.name = name;
 		this.balance = 0;
 
-		sentTransfers = new ArrayList<>();
-		receivedTransfers = new ArrayList<>();
-		incomes = new ArrayList<>();
-		expenses = new ArrayList<>();
-		paidExpenses = new ArrayList<>();
+		this.incomes = new ArrayList<>();
+		this.expenses = new ArrayList<>();
 	}
 
 	public void moneyAdd(double amount){
-		this.balance += amount;
+		this.balance -= amount;
 	}
 
 	public void moneySub(double amount){
-		this.balance -= amount;
+		this.balance += amount;
 	}
 
 	public void setBalance(double balance){
@@ -70,32 +59,21 @@ public class User {
 		return balance;
 	}
 
-	public List<Transfer> getSentTransfers(){
-		return sentTransfers;
-	}
-
-	public List<Transfer> getReceivedTransfers(){
-		return receivedTransfers;
-	}
-
-	public List<Income> getIncomes(){
-		return incomes;
-	}
-
-	public List<Expense> getExpenses(){
-		return expenses;
-	}
-
-	public List<Expense> getPaidExpenses(){
-		return paidExpenses;
-	}
-
 	public List<Transaction> getTransactions(){
-		List<Transaction> transactions = new ArrayList<>();
-		transactions.addAll(getSentTransfers());
-		transactions.addAll(getReceivedTransfers());
-		transactions.addAll(getIncomes());
-		transactions.addAll(getExpenses());
+		ArrayList<Transaction> transactions = new ArrayList<>();
+
+		List<Transaction> incomeTransactions = incomes.parallelStream()
+				.map(UserIncome::getIncome)
+				.map(Income::getTransaction)
+				.collect(Collectors.toList());
+
+		List<Transaction> expenseTransactions = expenses.parallelStream()
+				.map(UserExpense::getExpense)
+				.map(Expense::getTransaction)
+				.collect(Collectors.toList());
+
+		transactions.addAll(incomeTransactions);
+		transactions.addAll(expenseTransactions);
 
 		return transactions;
 	}

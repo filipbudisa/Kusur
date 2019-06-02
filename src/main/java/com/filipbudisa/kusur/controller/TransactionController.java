@@ -2,20 +2,16 @@ package com.filipbudisa.kusur.controller;
 
 import com.filipbudisa.kusur.exception.DataException;
 import com.filipbudisa.kusur.model.*;
-import com.filipbudisa.kusur.repository.MoneyDistributionRepository;
+import com.filipbudisa.kusur.repository.ExpenseRepository;
+import com.filipbudisa.kusur.repository.IncomeRepository;
 import com.filipbudisa.kusur.repository.TransactionRepository;
 import com.filipbudisa.kusur.repository.UserRepository;
 import com.filipbudisa.kusur.view.IncomeView;
-import com.filipbudisa.kusur.view.TransferView;
-import org.assertj.core.util.Lists;
-import org.json.JSONArray;
+import com.filipbudisa.kusur.view.TransactionView;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
@@ -25,16 +21,31 @@ public class TransactionController {
 	private TransactionRepository transactionRepo;
 
 	@Autowired
-	private MoneyDistributionRepository distributionRepo;
+	private IncomeRepository incomeRepo;
+
+	@Autowired
+	private ExpenseRepository expenseRepo;
 
 	@Autowired
 	private UserRepository userRepo;
 
-	@PostMapping("/transfer")
+	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public TransferView createTransfer(@RequestBody String body) throws Exception {
+	public TransactionView create(@RequestBody String body) throws Exception {
 		JSONObject data = new JSONObject(body);
 
+		Transaction.TransactionType type = Transaction.TransactionType.valueOf(data.getString("type").toUpperCase());
+
+		Transaction transaction;
+
+		if(true || type == Transaction.TransactionType.TRANSFER){
+			transaction = createTransfer(data);
+		}
+
+		return new TransactionView(transaction);
+	}
+
+	private Transaction createTransfer(JSONObject data) throws Exception {
 		long fromId = data.getLong("from_user_id");
 		long toId = data.getLong("to_user_id");
 
@@ -49,19 +60,26 @@ public class TransactionController {
 		from.moneySub(amount);
 		to.moneyAdd(amount);
 
-		return new TransferView(
-				transactionRepo.save(new Transfer(
-						from,
-						to,
-						amount
-				)
-		));
+		Transaction transaction = transactionRepo.save(new Transaction(Transaction.TransactionType.TRANSFER, amount));
+
+		Income income = new Income(transaction, MoneyDistribution.EQUAL, amount);
+		UserIncome userIncome = new UserIncome(from, income, amount);
+		income.addUserIncome(userIncome);
+
+		Expense expense = new Expense(transaction, MoneyDistribution.EQUAL, amount);
+		UserExpense userExpense = new UserExpense(to, expense, amount);
+		expense.addUserExpense(userExpense);
+
+		transaction.setIncome(incomeRepo.save(income));
+		transaction.setExpense(expenseRepo.save(expense));
+
+		return transaction;
 	}
 
 	@PostMapping("/income")
 	@ResponseStatus(HttpStatus.CREATED)
 	public IncomeView createIncome(@RequestBody String body) throws Exception {
-		JSONObject data = new JSONObject(body);
+		/*JSONObject data = new JSONObject(body);
 
 		Double amount = data.getDouble("amount");
 
@@ -123,6 +141,8 @@ public class TransactionController {
 		Income income = new Income(amount, Lists.newArrayList(users),distribution);
 		income = transactionRepo.save(income);
 
-		return new IncomeView(income);
+		return new IncomeView(income);*/
+
+		return null;
 	}
 }

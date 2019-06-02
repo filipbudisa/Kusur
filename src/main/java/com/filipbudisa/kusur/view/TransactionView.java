@@ -3,17 +3,19 @@ package com.filipbudisa.kusur.view;
 import com.filipbudisa.kusur.model.Transaction;
 
 public class TransactionView {
-	protected long id;
+	private long id;
 
-	protected String type;
+	private String type;
 
-	protected double amount;
+	private double amount;
+
+	private IncomeView income;
 
 	public TransactionView(Transaction transaction){
 		this.id = transaction.getId();
+		this.type = transaction.getType().toString().toLowerCase();
 		this.amount = transaction.getAmount();
-
-		this.type = transaction.getClass().getSimpleName().toLowerCase();
+		this.income = new IncomeView(transaction.getIncome());
 	}
 
 	public long getId(){
@@ -26,5 +28,9 @@ public class TransactionView {
 
 	public double getAmount(){
 		return amount;
+	}
+
+	public IncomeView getIncome(){
+		return income;
 	}
 }

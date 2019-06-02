@@ -1,19 +1,18 @@
 package com.filipbudisa.kusur.view;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.filipbudisa.kusur.model.MoneyDistributionPart;
+import com.filipbudisa.kusur.model.UserIncome;
 
-public class MoneyDistributionPartView {
+public class UserIncomeView {
 
 	@JsonProperty("user_id")
 	private long userId;
 
 	private double value;
 
-
-	public MoneyDistributionPartView(MoneyDistributionPart part){
-		this.userId = part.getUser().getId();
-		this.value = part.getValue();
+	public UserIncomeView(UserIncome income){
+		this.userId = income.getUser().getId();
+		this.value = income.getValue();
 	}
 
 	public long getUserId(){

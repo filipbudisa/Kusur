@@ -1,34 +1,59 @@
 package com.filipbudisa.kusur.model;
 
 import javax.persistence.*;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-public class Income extends Transaction {
+public class Income {
 
-	@ManyToMany(fetch = FetchType.LAZY)
-	@JoinTable(name = "user_income",
-			joinColumns = @JoinColumn(name = "income_id"),
-			inverseJoinColumns = @JoinColumn(name = "user_id"))
-	private List<User> users;
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private long id;
 
-	@OneToOne
-	@JoinColumn(name = "distribution_id")
+	@OneToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "transaction_id")
+	private Transaction transaction;
+
+	@Enumerated(value = EnumType.ORDINAL)
 	private MoneyDistribution distribution;
+
+	private double amount;
+
+	@OneToMany(mappedBy = "income", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private List<UserIncome> users;
 
 	protected Income(){ }
 
-	public Income(double amount, List<User> users, MoneyDistribution distribution){
-		this.amount = amount;
-		this.users = users;
+	public Income(Transaction transaction, MoneyDistribution distribution, double amount){
+		this.transaction = transaction;
 		this.distribution = distribution;
+		this.amount = amount;
+
+		users = new ArrayList<>();
 	}
 
-	public List<User> getUsers(){
-		return users;
+	public void addUserIncome(UserIncome income){
+		users.add(income);
+	}
+
+	public long getId(){
+		return id;
+	}
+
+	public Transaction getTransaction(){
+		return transaction;
 	}
 
 	public MoneyDistribution getDistribution(){
 		return distribution;
+	}
+
+	public double getAmount(){
+		return amount;
+	}
+
+	public List<UserIncome> getUsers(){
+		return users;
 	}
 }
