@@ -1,7 +1,10 @@
 package com.filipbudisa.kusur.view;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.filipbudisa.kusur.model.*;
+import com.filipbudisa.kusur.model.Expense;
+import com.filipbudisa.kusur.model.MoneyDistribution;
+import com.filipbudisa.kusur.model.User;
+import com.filipbudisa.kusur.model.UserExpense;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,9 +19,13 @@ public class ExpenseView {
 
 	private List<Long> userIds;
 
+	@JsonProperty("transaction_id")
+	private Long transactionId;
+
 	public ExpenseView(Expense expense){
 		this.amount = expense.getAmount();
 		this.distribution = expense.getDistribution().toString().toLowerCase();
+		this.transactionId = expense.getTransaction().getId();
 
 		if(expense.getDistribution() == MoneyDistribution.EQUAL){
 			this.userIds = expense.getUsers()
@@ -49,5 +56,9 @@ public class ExpenseView {
 		}else{
 			return userIds;
 		}
+	}
+
+	public Long getTransactionId(){
+		return transactionId;
 	}
 }

@@ -6,16 +6,12 @@ import com.filipbudisa.kusur.repository.ExpenseRepository;
 import com.filipbudisa.kusur.repository.IncomeRepository;
 import com.filipbudisa.kusur.repository.TransactionRepository;
 import com.filipbudisa.kusur.repository.UserRepository;
-import com.filipbudisa.kusur.view.IncomeView;
 import com.filipbudisa.kusur.view.TransactionView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")

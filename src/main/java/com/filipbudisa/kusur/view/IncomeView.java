@@ -1,6 +1,5 @@
 package com.filipbudisa.kusur.view;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.filipbudisa.kusur.model.Income;
 import com.filipbudisa.kusur.model.MoneyDistribution;
@@ -20,9 +19,13 @@ public class IncomeView {
 
 	private List<Long> userIds;
 
+	@JsonProperty("transaction_id")
+	private Long transactionId;
+
 	public IncomeView(Income income){
 		this.amount = income.getAmount();
 		this.distribution = income.getDistribution().toString().toLowerCase();
+		this.transactionId = income.getTransaction().getId();
 
 		if(income.getDistribution() == MoneyDistribution.EQUAL){
 			this.userIds = income.getUsers()
@@ -53,5 +56,9 @@ public class IncomeView {
 		}else{
 			return userIds;
 		}
+	}
+
+	public Long getTransactionId(){
+		return transactionId;
 	}
 }

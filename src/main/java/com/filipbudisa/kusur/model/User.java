@@ -79,4 +79,12 @@ public class User {
 
 		return transactions;
 	}
+
+	public List<UserIncome> getIncomes(){
+		return incomes;
+	}
+
+	public List<UserExpense> getExpenses(){
+		return expenses;
+	}
 }
