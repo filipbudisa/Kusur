@@ -5,6 +5,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 public class UserIncome implements Serializable {
@@ -39,5 +40,19 @@ public class UserIncome implements Serializable {
 
 	public double getValue(){
 		return value;
+	}
+
+	@Override
+	public boolean equals(Object o){
+		if(this == o) return true;
+		if(!(o instanceof UserIncome)) return false;
+		UserIncome that = (UserIncome) o;
+		return Objects.equals(user.getId(), that.user.getId()) &&
+				Objects.equals(income.getId(), that.income.getId());
+	}
+
+	@Override
+	public int hashCode(){
+		return Objects.hash(user.getId(), income.getId());
 	}
 }

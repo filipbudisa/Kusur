@@ -1,6 +1,7 @@
 package com.filipbudisa.kusur.model;
 
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 public class Transaction {
@@ -45,11 +46,28 @@ public class Transaction {
 		return income;
 	}
 
+	public Expense getExpense(){
+		return expense;
+	}
+
 	public void setIncome(Income income){
 		this.income = income;
 	}
 
 	public void setExpense(Expense expense){
 		this.expense = expense;
+	}
+
+	@Override
+	public boolean equals(Object o){
+		if(this == o) return true;
+		if(!(o instanceof Transaction)) return false;
+		Transaction that = (Transaction) o;
+		return id == that.id;
+	}
+
+	@Override
+	public int hashCode(){
+		return Objects.hash(id);
 	}
 }

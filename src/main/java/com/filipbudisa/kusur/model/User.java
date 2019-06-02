@@ -4,7 +4,9 @@ package com.filipbudisa.kusur.model;
 import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
@@ -59,8 +61,8 @@ public class User {
 		return balance;
 	}
 
-	public List<Transaction> getTransactions(){
-		ArrayList<Transaction> transactions = new ArrayList<>();
+	public Set<Transaction> getTransactions(){
+		Set<Transaction> transactions = new HashSet<>();
 
 		List<Transaction> incomeTransactions = incomes.parallelStream()
 				.map(UserIncome::getIncome)

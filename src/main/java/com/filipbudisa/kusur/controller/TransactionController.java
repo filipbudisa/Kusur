@@ -8,10 +8,14 @@ import com.filipbudisa.kusur.repository.TransactionRepository;
 import com.filipbudisa.kusur.repository.UserRepository;
 import com.filipbudisa.kusur.view.IncomeView;
 import com.filipbudisa.kusur.view.TransactionView;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/transaction")
@@ -38,8 +42,10 @@ public class TransactionController {
 
 		Transaction transaction;
 
-		if(true || type == Transaction.TransactionType.TRANSFER){
+		if(type == Transaction.TransactionType.TRANSFER){
 			transaction = createTransfer(data);
+		}else{
+			transaction = createGeneric(data);
 		}
 
 		return new TransactionView(transaction);
@@ -76,73 +82,152 @@ public class TransactionController {
 		return transaction;
 	}
 
-	@PostMapping("/income")
-	@ResponseStatus(HttpStatus.CREATED)
-	public IncomeView createIncome(@RequestBody String body) throws Exception {
-		/*JSONObject data = new JSONObject(body);
-
+	private Transaction createGeneric(JSONObject data) throws Exception {
 		Double amount = data.getDouble("amount");
+		Transaction transaction = new Transaction(Transaction.TransactionType.GENERAL, amount);
 
-		JSONArray $users = data.getJSONArray("users");
-		JSONObject $distribution = data.getJSONObject("distribution");
+		/** ##### Expenses ##### */
 
-		List<Long> userIds = new ArrayList<>();
-		for(int i = 0; i < $users.length(); i++){
-			userIds.add($users.getLong(i));
-		}
+		JSONObject $expense = data.getJSONObject("expense");
 
-		Iterable<User> users = userRepo.findAllById(userIds);
-
-		MoneyDistribution.MoneyDistributionType distroType;
+		MoneyDistribution expenseDistribution;
 		try{
-			distroType = MoneyDistribution.MoneyDistributionType.valueOf($distribution.getString("type").toUpperCase());
+			expenseDistribution = MoneyDistribution.valueOf($expense.getString("distribution").toUpperCase());
 		}catch(IllegalArgumentException e){
 			throw new DataException("Unknown distribution type");
 		}
 
-		MoneyDistribution distribution = new MoneyDistribution(distroType);
+		Expense expense = new Expense(transaction, expenseDistribution, amount);
 
-		if(distroType != MoneyDistribution.MoneyDistributionType.EQUAL){
-			JSONObject $parts = $distribution.getJSONObject("parts");
+		if(expenseDistribution == MoneyDistribution.EQUAL){
+			JSONArray $users = $expense.getJSONArray("users");
+			double value = amount / $users.length();
 
-			double sum = 0;
-
-			for(User user : users){
-				double partValue = $parts.getDouble(String.valueOf(user.getId()));
-				MoneyDistributionPart part = new MoneyDistributionPart(user, partValue);
-				sum += partValue;
-
-				double moneyValue;
-
-				if(distroType == MoneyDistribution.MoneyDistributionType.PERCENTAGE){
-					moneyValue = amount * partValue / 100.0;
-				}else{
-					moneyValue = partValue;
-				}
-
-				user.moneyAdd(moneyValue);
-				distribution.addPart(part);
-			}
-
-			if(distroType == MoneyDistribution.MoneyDistributionType.PERCENTAGE && sum != 100.0){
-				throw new DataException("Percentage sum must be 100");
-			}else if(distroType == MoneyDistribution.MoneyDistributionType.ABSOLUTE && sum != amount){
-				throw new DataException("Parts sum must be equal to amount");
+			for(int i = 0; i < $users.length(); i++){
+				expense.addUserExpense(new UserExpense(
+						userRepo.findById($users.getLong(i)).get(),
+						expense,
+						value
+				));
 			}
 		}else{
-			double moneyValue = amount / userIds.size();
-			for(User user : users){
-				user.moneyAdd(moneyValue);
+			JSONArray $users = $expense.getJSONArray("users");
+			double sum = 0;
+
+			for(int i = 0; i < $users.length(); i++){
+				JSONObject $user = $users.getJSONObject(i);
+				double value = $user.getDouble("value");
+				sum += value;
+
+				expense.addUserExpense(new UserExpense(
+						userRepo.findById($user.getLong("id")).get(),
+						expense,
+						value
+				));
+			}
+
+			if(expenseDistribution == MoneyDistribution.PERCENTAGE && sum != 100){
+				throw new DataException("Percentage sum must be 100");
+			}else if(expenseDistribution == MoneyDistribution.ABSOLUTE && sum != amount){
+				throw new DataException("Parts sum must be equal to amount");
 			}
 		}
 
-		distribution = distributionRepo.save(distribution);
+		/** ##### Incomes ##### */
 
-		Income income = new Income(amount, Lists.newArrayList(users),distribution);
-		income = transactionRepo.save(income);
+		JSONObject $income = data.getJSONObject("income");
 
-		return new IncomeView(income);*/
+		MoneyDistribution incomeDistribution;
+		try{
+			incomeDistribution = MoneyDistribution.valueOf($income.getString("distribution").toUpperCase());
+		}catch(IllegalArgumentException e){
+			throw new DataException("Unknown distribution type");
+		}
 
-		return null;
+		Income income = new Income(transaction, incomeDistribution, amount);
+
+		if(incomeDistribution == MoneyDistribution.EQUAL){
+			JSONArray $users = $income.getJSONArray("users");
+			double value = amount / $users.length();
+
+			for(int i = 0; i < $users.length(); i++){
+				income.addUserIncome(new UserIncome(
+						userRepo.findById($users.getLong(i)).get(),
+						income,
+						value
+				));
+			}
+		}else{
+			JSONArray $users = $income.getJSONArray("users");
+			double sum = 0;
+
+			for(int i = 0; i < $users.length(); i++){
+				JSONObject $user = $users.getJSONObject(i);
+				double value = $user.getDouble("value");
+				sum += value;
+
+				income.addUserIncome(new UserIncome(
+						userRepo.findById($user.getLong("id")).get(),
+						income,
+						value
+				));
+			}
+
+			if(incomeDistribution == MoneyDistribution.PERCENTAGE && sum != 100){
+				throw new DataException("Percentage sum must be 100");
+			}else if(incomeDistribution == MoneyDistribution.ABSOLUTE && sum != amount){
+				throw new DataException("Parts sum must be equal to amount");
+			}
+		}
+
+		/** ##### Saving ##### */
+		transaction = transactionRepo.save(transaction);
+		expense.setTransaction(transaction);
+		income.setTransaction(transaction);
+		transaction.setExpense(expenseRepo.save(expense));
+		transaction.setIncome(incomeRepo.save(income));
+
+		/** ##### Updating balances ##### */
+		if(expenseDistribution == MoneyDistribution.EQUAL){
+			double value = expense.getAmount() / expense.getUsers().size();
+			expense.getUsers()
+					.parallelStream()
+					.map(UserExpense::getUser)
+					.forEach(u -> u.moneyAdd(value));
+		}else{
+			for(UserExpense e : expense.getUsers()){
+				double value = e.getValue();
+
+				if(expenseDistribution == MoneyDistribution.PERCENTAGE){
+					value *= amount / 100;
+				}
+
+				User user = e.getUser();
+				user.moneyAdd(value);
+				userRepo.save(user);
+			}
+		}
+
+		if(incomeDistribution == MoneyDistribution.EQUAL){
+			double value = income.getAmount() / income.getUsers().size();
+			income.getUsers()
+					.parallelStream()
+					.map(UserIncome::getUser)
+					.forEach(u -> u.moneySub(value));
+		}else{
+			for(UserIncome e : income.getUsers()){
+				double value = e.getValue();
+
+				if(incomeDistribution == MoneyDistribution.PERCENTAGE){
+					value *= amount / 100;
+				}
+
+				User user = e.getUser();
+				user.moneySub(value);
+				userRepo.save(user);
+			}
+		}
+
+		return transaction;
 	}
 }

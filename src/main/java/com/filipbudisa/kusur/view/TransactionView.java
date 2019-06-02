@@ -11,11 +11,14 @@ public class TransactionView {
 
 	private IncomeView income;
 
+	private ExpenseView expense;
+
 	public TransactionView(Transaction transaction){
 		this.id = transaction.getId();
 		this.type = transaction.getType().toString().toLowerCase();
 		this.amount = transaction.getAmount();
 		this.income = new IncomeView(transaction.getIncome());
+		this.expense = new ExpenseView(transaction.getExpense());
 	}
 
 	public long getId(){
@@ -32,5 +35,9 @@ public class TransactionView {
 
 	public IncomeView getIncome(){
 		return income;
+	}
+
+	public ExpenseView getExpense(){
+		return expense;
 	}
 }

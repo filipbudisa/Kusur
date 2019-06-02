@@ -11,7 +11,7 @@ public class Expense {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
-	@OneToOne(fetch = FetchType.LAZY)
+	@OneToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "transaction_id")
 	private Transaction transaction;
 
@@ -55,5 +55,9 @@ public class Expense {
 
 	public List<UserExpense> getUsers(){
 		return users;
+	}
+
+	public void setTransaction(Transaction transaction){
+		this.transaction = transaction;
 	}
 }
