@@ -18,6 +18,10 @@ public class MoneyDistribution {
 	@Enumerated(value = EnumType.ORDINAL)
 	private MoneyDistributionType type;
 
+	/*@OneToOne(mappedBy = "distribution")
+	@JoinColumn
+	private Transaction transaction;*/
+
 	@OneToMany(mappedBy = "distribution")
 	private List<MoneyDistributionPart> parts;
 

@@ -24,13 +24,13 @@ public class User {
 	@OneToMany(mappedBy = "to", fetch = FetchType.LAZY)
 	private List<Transfer> receivedTransfers;
 
-	@OneToMany(mappedBy = "users", fetch = FetchType.LAZY)
+	@ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
 	private List<Income> incomes;
 
-	@OneToMany(mappedBy = "users", fetch = FetchType.LAZY)
+	@ManyToMany(mappedBy = "users", fetch = FetchType.LAZY)
 	private List<Expense> expenses;
 
-	@OneToMany(mappedBy = "payingUsers", fetch = FetchType.LAZY)
+	@ManyToMany(mappedBy = "payingUsers", fetch = FetchType.LAZY)
 	private List<Expense> paidExpenses;
 
 	protected User(){ }
@@ -44,6 +44,14 @@ public class User {
 		incomes = new ArrayList<>();
 		expenses = new ArrayList<>();
 		paidExpenses = new ArrayList<>();
+	}
+
+	public void moneyAdd(double amount){
+		this.balance += amount;
+	}
+
+	public void moneySub(double amount){
+		this.balance -= amount;
 	}
 
 	public void setBalance(double balance){

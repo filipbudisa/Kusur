@@ -17,4 +17,18 @@ public class Income extends Transaction {
 	private MoneyDistribution distribution;
 
 	protected Income(){ }
+
+	public Income(double amount, List<User> users, MoneyDistribution distribution){
+		this.amount = amount;
+		this.users = users;
+		this.distribution = distribution;
+	}
+
+	public List<User> getUsers(){
+		return users;
+	}
+
+	public MoneyDistribution getDistribution(){
+		return distribution;
+	}
 }
