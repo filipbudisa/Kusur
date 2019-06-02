@@ -1,5 +1,6 @@
 package com.filipbudisa.kusur.controller;
 
+import com.filipbudisa.kusur.exception.NotFoundException;
 import com.filipbudisa.kusur.model.User;
 import com.filipbudisa.kusur.model.UserExpense;
 import com.filipbudisa.kusur.model.UserIncome;
@@ -30,21 +31,22 @@ public class UserController {
 
 	@GetMapping("/{id}")
 	@ResponseStatus(HttpStatus.OK)
-	public UserView get(@PathVariable long id){
-		return new UserView(userRepo.findById(id).get());
+	public UserView get(@PathVariable long id) throws NotFoundException {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
+		return new UserView(user);
 	}
 
 	@GetMapping("/{id}/transactions")
 	@ResponseStatus(HttpStatus.CREATED)
-	public List<TransactionView> getTransactions(@PathVariable long id){
-		User user = userRepo.findById(id).get();
+	public List<TransactionView> getTransactions(@PathVariable long id) throws NotFoundException {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
 		return new UserView(user).getTransactions();
 	}
 
 	@GetMapping("/{id}/incomes")
 	@ResponseStatus(HttpStatus.CREATED)
-	public List<IncomeView> getIncomes(@PathVariable long id){
-		User user = userRepo.findById(id).get();
+	public List<IncomeView> getIncomes(@PathVariable long id) throws NotFoundException {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
 		return user.getIncomes()
 				.parallelStream()
 				.map(UserIncome::getIncome)
@@ -54,8 +56,8 @@ public class UserController {
 
 	@GetMapping("/{id}/expenses")
 	@ResponseStatus(HttpStatus.CREATED)
-	public List<ExpenseView> getExpenses(@PathVariable long id){
-		User user = userRepo.findById(id).get();
+	public List<ExpenseView> getExpenses(@PathVariable long id) throws NotFoundException {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
 		return user.getExpenses()
 				.parallelStream()
 				.map(UserExpense::getExpense)

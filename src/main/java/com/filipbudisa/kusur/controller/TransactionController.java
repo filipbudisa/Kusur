@@ -1,6 +1,7 @@
 package com.filipbudisa.kusur.controller;
 
 import com.filipbudisa.kusur.exception.DataException;
+import com.filipbudisa.kusur.exception.NotFoundException;
 import com.filipbudisa.kusur.model.*;
 import com.filipbudisa.kusur.repository.ExpenseRepository;
 import com.filipbudisa.kusur.repository.IncomeRepository;
@@ -10,6 +11,7 @@ import com.filipbudisa.kusur.view.TransactionView;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -61,8 +63,8 @@ public class TransactionController {
 			throw new DataException("User can't transfer money to himself");
 		}
 
-		User from = userRepo.findById(fromId).get();
-		User to = userRepo.findById(toId).get();
+		User from = userRepo.findById(fromId).orElseThrow(() -> new NotFoundException("user", String.valueOf(fromId)));
+		User to = userRepo.findById(toId).orElseThrow(() -> new NotFoundException("user", String.valueOf(toId)));
 		Double amount = data.getDouble("amount");
 
 		from.moneySub(amount);
@@ -121,8 +123,10 @@ public class TransactionController {
 				double value = $user.getDouble("value");
 				sum += value;
 
+				Long userId = $user.getLong("id");
+
 				expense.addUserExpense(new UserExpense(
-						userRepo.findById($user.getLong("id")).get(),
+						userRepo.findById(userId).orElseThrow(() -> new NotFoundException("user", String.valueOf(userId))),
 						expense,
 						value
 				));
@@ -153,8 +157,10 @@ public class TransactionController {
 			double value = amount / $users.length();
 
 			for(int i = 0; i < $users.length(); i++){
+				Long userId = $users.getLong(i);
+
 				income.addUserIncome(new UserIncome(
-						userRepo.findById($users.getLong(i)).get(),
+						userRepo.findById(userId).orElseThrow(() -> new NotFoundException("user", String.valueOf(userId))),
 						income,
 						value
 				));
@@ -168,8 +174,10 @@ public class TransactionController {
 				double value = $user.getDouble("value");
 				sum += value;
 
+				Long userId = $users.getLong(i);
+
 				income.addUserIncome(new UserIncome(
-						userRepo.findById($user.getLong("id")).get(),
+						userRepo.findById($user.getLong("id")).orElseThrow(() -> new NotFoundException("user", String.valueOf(userId))),
 						income,
 						value
 				));
