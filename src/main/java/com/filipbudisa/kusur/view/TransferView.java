@@ -1,8 +1,6 @@
 package com.filipbudisa.kusur.view;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyDescription;
-import com.filipbudisa.kusur.model.Transaction;
 import com.filipbudisa.kusur.model.Transfer;
 
 public class TransferView extends TransactionView {

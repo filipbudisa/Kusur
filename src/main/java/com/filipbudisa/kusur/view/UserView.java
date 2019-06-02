@@ -1,8 +1,6 @@
 package com.filipbudisa.kusur.view;
 
-import com.filipbudisa.kusur.model.Transaction;
 import com.filipbudisa.kusur.model.User;
-import org.assertj.core.util.Lists;
 
 import java.util.List;
 import java.util.stream.Collectors;
