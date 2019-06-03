@@ -1,5 +1,6 @@
 package com.filipbudisa.kusur.controller;
 
+import com.filipbudisa.kusur.Logger;
 import com.filipbudisa.kusur.exception.LogicException;
 import com.filipbudisa.kusur.exception.NotFoundException;
 import com.filipbudisa.kusur.model.User;
@@ -27,7 +28,11 @@ public class UserController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public UserView create(@RequestBody User user){
-		return new UserView(userRepo.save(new User(user.getName())));
+		User newUser = userRepo.save(new User(user.getName()));
+
+		Logger.info(String.format("Created user %s with id %d", newUser.getName(), newUser.getId()));
+
+		return new UserView(newUser);
 	}
 
 	@GetMapping("/{id}")
@@ -74,6 +79,8 @@ public class UserController {
 		if(user.getBalance() != 0){
 			throw new LogicException("User's balance isn't 0");
 		}
+
+		Logger.info(String.format("Deleted user %s with id %d", user.getName(), user.getId()));
 
 		userRepo.deleteById(id);
 	}

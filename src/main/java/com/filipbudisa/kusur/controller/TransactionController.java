@@ -1,5 +1,6 @@
 package com.filipbudisa.kusur.controller;
 
+import com.filipbudisa.kusur.Logger;
 import com.filipbudisa.kusur.exception.DataException;
 import com.filipbudisa.kusur.exception.NotFoundException;
 import com.filipbudisa.kusur.model.*;
@@ -42,7 +43,14 @@ public class TransactionController {
 	public TransactionView create(@RequestBody String body) throws Exception {
 		JSONObject data = new JSONObject(body);
 
-		Transaction.TransactionType type = Transaction.TransactionType.valueOf(data.getString("type").toUpperCase());
+		Transaction.TransactionType type;
+		try{
+			type = Transaction.TransactionType.valueOf(data.getString("type").toUpperCase());
+		}catch(IllegalArgumentException e){
+			throw new DataException("Unknown transaction type", data.toString());
+		}
+
+		Logger.info(String.format("Created new %s transaction", type.toString().toLowerCase()));
 
 		Transaction transaction;
 
@@ -60,7 +68,7 @@ public class TransactionController {
 		long toId = data.getLong("to_user_id");
 
 		if(fromId == toId){
-			throw new DataException("User can't transfer money to himself");
+			throw new DataException("User can't transfer money to himself", data.toString());
 		}
 
 		User from = userRepo.findById(fromId).orElseThrow(() -> new NotFoundException("user", String.valueOf(fromId)));
@@ -98,7 +106,7 @@ public class TransactionController {
 		try{
 			expenseDistribution = MoneyDistribution.valueOf($expense.getString("distribution").toUpperCase());
 		}catch(IllegalArgumentException e){
-			throw new DataException("Unknown distribution type");
+			throw new DataException("Unknown distribution type", data.toString());
 		}
 
 		Expense expense = new Expense(transaction, expenseDistribution, amount);
@@ -108,8 +116,9 @@ public class TransactionController {
 			double value = amount / $users.length();
 
 			for(int i = 0; i < $users.length(); i++){
+				final int id = i;
 				expense.addUserExpense(new UserExpense(
-						userRepo.findById($users.getLong(i)).get(),
+						userRepo.findById($users.getLong(id)).orElseThrow(() -> new NotFoundException("user", String.valueOf(id))),
 						expense,
 						value
 				));
@@ -133,9 +142,9 @@ public class TransactionController {
 			}
 
 			if(expenseDistribution == MoneyDistribution.PERCENTAGE && sum != 100){
-				throw new DataException("Percentage sum must be 100");
+				throw new DataException("Percentage sum must be 100", data.toString());
 			}else if(expenseDistribution == MoneyDistribution.ABSOLUTE && sum != amount){
-				throw new DataException("Parts sum must be equal to amount");
+				throw new DataException("Parts sum must be equal to amount", data.toString());
 			}
 		}
 
@@ -147,7 +156,7 @@ public class TransactionController {
 		try{
 			incomeDistribution = MoneyDistribution.valueOf($income.getString("distribution").toUpperCase());
 		}catch(IllegalArgumentException e){
-			throw new DataException("Unknown distribution type");
+			throw new DataException("Unknown distribution type", data.toString());
 		}
 
 		Income income = new Income(transaction, incomeDistribution, amount);
@@ -184,9 +193,9 @@ public class TransactionController {
 			}
 
 			if(incomeDistribution == MoneyDistribution.PERCENTAGE && sum != 100){
-				throw new DataException("Percentage sum must be 100");
+				throw new DataException("Percentage sum must be 100", data.toString());
 			}else if(incomeDistribution == MoneyDistribution.ABSOLUTE && sum != amount){
-				throw new DataException("Parts sum must be equal to amount");
+				throw new DataException("Parts sum must be equal to amount", data.toString());
 			}
 		}
 

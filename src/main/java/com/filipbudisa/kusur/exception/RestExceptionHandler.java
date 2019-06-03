@@ -1,5 +1,6 @@
 package com.filipbudisa.kusur.exception;
 
+import com.filipbudisa.kusur.Logger;
 import org.json.JSONException;
 import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.http.HttpHeaders;
@@ -15,24 +16,32 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
 	@ExceptionHandler({ DataException.class })
 	public ResponseEntity<Object> dataException(DataException e, WebRequest request){
+		Logger.error("data", e.getBody());
+
 		return handleExceptionInternal(e, new JSONRepresentation("data", e.getMessage()),
 				new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}
 
 	@ExceptionHandler({ LogicException.class })
 	public ResponseEntity<Object> logicException(LogicException e, WebRequest request){
+		Logger.error("logic");
+
 		return handleExceptionInternal(e, new JSONRepresentation("logic", e.getMessage()),
 				new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}
 
 	@ExceptionHandler({ JSONException.class })
 	public ResponseEntity<Object> JSONException(JSONException e, WebRequest request){
+		Logger.error("json", e.getMessage());
+
 		return handleExceptionInternal(e, new JSONRepresentation("json", "Malformed JSON"),
 				new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}
 
 	@ExceptionHandler({ NotFoundException.class })
 	public ResponseEntity<Object> NotFoundException(NotFoundException e, WebRequest request){
+		Logger.error("not_found");
+
 		return handleExceptionInternal(e, new JSONRepresentation("not_found",
 						"Couldn't find " + e.getEntity() + " with identifier " + e.getIdentifier()),
 				new HttpHeaders(), HttpStatus.NOT_FOUND, request);

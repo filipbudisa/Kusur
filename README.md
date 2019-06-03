@@ -6,6 +6,11 @@ By default, the data is stored in-memory, but other storage methods offered by H
 
 H2 web console is also enabled by default and accessible at ```/console```. This can be disabled by setting ```spring.h2.console.enabled``` to false.
 
+## Logging
+Logs are stored in the ```log``` directory. Info and error logs are created. Info logs get filled when users and transactions are created, deleted or changed.
+
+Error logs are filled with all errors. Additionally, on **data** errors, the request body is appended, and on **json** errors, the thrown exception message is appended. See [REST API](#rest-api) for all error types.
+
 # Compiling, running, testing
 Standard maven project:
 
