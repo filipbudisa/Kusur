@@ -11,7 +11,7 @@ public class Income {
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private long id;
 
-	@OneToOne(fetch = FetchType.EAGER)
+	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "transaction_id")
 	private Transaction transaction;
 

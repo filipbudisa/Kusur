@@ -174,7 +174,7 @@ public class TransactionController {
 				double value = $user.getDouble("value");
 				sum += value;
 
-				Long userId = $users.getLong(i);
+				Long userId = $user.getLong("id");
 
 				income.addUserIncome(new UserIncome(
 						userRepo.findById($user.getLong("id")).orElseThrow(() -> new NotFoundException("user", String.valueOf(userId))),
@@ -201,9 +201,9 @@ public class TransactionController {
 		if(expenseDistribution == MoneyDistribution.EQUAL){
 			double value = expense.getAmount() / expense.getUsers().size();
 			expense.getUsers()
-					.parallelStream()
+					.stream()
 					.map(UserExpense::getUser)
-					.forEach(u -> u.moneyAdd(value));
+					.forEach(u -> { u.moneyAdd(value); userRepo.save(u); });
 		}else{
 			for(UserExpense e : expense.getUsers()){
 				double value = e.getValue();
@@ -221,9 +221,9 @@ public class TransactionController {
 		if(incomeDistribution == MoneyDistribution.EQUAL){
 			double value = income.getAmount() / income.getUsers().size();
 			income.getUsers()
-					.parallelStream()
+					.stream()
 					.map(UserIncome::getUser)
-					.forEach(u -> u.moneySub(value));
+					.forEach(u -> { u.moneySub(value); userRepo.save(u); });
 		}else{
 			for(UserIncome e : income.getUsers()){
 				double value = e.getValue();
