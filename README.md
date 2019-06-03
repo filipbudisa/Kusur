@@ -32,7 +32,7 @@ The server runs at ```localhost:8080```. All data requested and returned is in J
 The following data structures are defined:
 
 ### Income / Expense
-Distribution can either be euqal among all users, percentage divided, or based on absolute values.
+Distribution can either be equal among all users, percentage divided, or based on absolute values.
 ```
 {
     amount: <double>,
@@ -96,10 +96,10 @@ Retrieves the user with the passed ID. Returns a [user](#user) object.
 Retrieves the users transactions. Returns an array or [transaction](#transaction) objects.
 
 ### GET /user/{id}/incomes
-Retrieves the users incomes. Returns an array of [income](#income-/-expense) objects.
+Retrieves the users incomes. Returns an array of [income](#income--expense) objects.
 
 ### GET /user/{id}/expenses
-Retrieves the users expenses. Returns an array of [expense](#income-/-expense) objects.
+Retrieves the users expenses. Returns an array of [expense](#income--expense) objects.
 
 ### POST /transaction
 Creates a new transaction. Accepts two forms of requests.
