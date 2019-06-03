@@ -75,12 +75,12 @@ A transaction can either be a money transfer from one user to another, or a gene
     id: <long>,
     name: <string>,
     balance: <double>,
-    transactions: [<transactions>]
+    transactions: [<transaction>]
 }
 ```
 
 ### SimpleUser
-Same as [User](#user), but without ```transaction```.
+Same as [User](#user), but without ```transactions```.
 
 ## Methods
 The following methods are exposed:
@@ -102,7 +102,7 @@ Returns a [user](#user) object.
 Retrieves the user with the passed ID. Returns a [user](#user) object.
 
 ### GET /user/{id}/transactions
-Retrieves the users transactions. Returns an array or [transaction](#transaction) objects.
+Retrieves the users transactions. Returns an array of [transaction](#transaction) objects.
 
 ### GET /user/{id}/incomes
 Retrieves the users incomes. Returns an array of [income](#income--expense) objects.
