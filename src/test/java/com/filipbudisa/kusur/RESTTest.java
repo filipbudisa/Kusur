@@ -26,7 +26,6 @@ public class RESTTest {
 				.post("http://localhost:8080/user");
 
 		assertEquals("TEST", response.path("name"));
-		assertEquals(1, (int) response.path("id"));
 	}
 
 	@Test
@@ -100,13 +99,10 @@ public class RESTTest {
 				.put("income", new JSONObject()
 					.put("distribution", "equal")
 					.put("users", new JSONArray(new int[]{ userB })));
-		Response resp = RestAssured.given()
+		RestAssured.given()
 				.contentType(ContentType.JSON)
 				.body(taxi.toString())
 				.post("http://localhost:8080/transaction");
-
-		System.out.println(taxi.toString());
-		System.out.println(resp.getBody().toString());
 
 		assertEquals(-41.0F, RestAssured.given()
 				.contentType(ContentType.JSON)
@@ -124,4 +120,51 @@ public class RESTTest {
 				.path("balance"), 0);
 	}
 
+	@Test
+	public void percentage() throws Exception {
+		int userA = RestAssured.given()
+				.contentType(ContentType.JSON)
+				.body(new JSONObject().put("name", "A").toString())
+				.post("http://localhost:8080/user")
+				.path("id");
+
+		int userB = RestAssured.given()
+				.contentType(ContentType.JSON)
+				.body(new JSONObject().put("name", "B").toString())
+				.post("http://localhost:8080/user")
+				.path("id");
+
+		JSONObject transaction = new JSONObject()
+				.put("type", "general")
+				.put("amount", "63")
+				.put("expense", new JSONObject()
+						.put("distribution", "percentage")
+						.put("users", new JSONArray(new JSONObject[]{
+								new JSONObject().put("id", userA).put("value", 15),
+								new JSONObject().put("id", userB).put("value", 85),
+						})))
+				.put("income", new JSONObject()
+						.put("distribution", "equal")
+						.put("users", new JSONArray(new int[]{ userA })));
+		RestAssured.given()
+				.contentType(ContentType.JSON)
+				.body(transaction.toString())
+				.post("http://localhost:8080/transaction");
+
+		float balanceA = RestAssured.given()
+				.contentType(ContentType.JSON)
+				.get("http://localhost:8080/user/" + userA)
+				.path("balance");
+
+		float balanceB = RestAssured.given()
+				.contentType(ContentType.JSON)
+				.get("http://localhost:8080/user/" + userB)
+				.path("balance");
+
+		assertNotEquals(0.0F, balanceA, 0.001);
+		assertNotEquals(0.0F, balanceB, 0.001);
+		assertEquals(63.0F * 0.85F, balanceA, 0.001);
+		assertEquals(-63.0F * 0.85F, balanceB, 0.001);
+		assertEquals(0, balanceA + balanceB, 0.001);
+	}
 }
