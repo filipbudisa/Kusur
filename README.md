@@ -102,6 +102,9 @@ Retrieves the users incomes. Returns an array of [income](#income--expense) obje
 ### GET /user/{id}/expenses
 Retrieves the users expenses. Returns an array of [expense](#income--expense) objects.
 
+### PATCH /user/{id}
+Changes the passed user's name. Expects same JSON structure as [POST /user](#post-user)
+
 ### DELETE /user/{id}
 Deletes the user with the passed ID. Will throw an error if the user's balance isn't 0.
 

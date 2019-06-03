@@ -77,4 +77,15 @@ public class UserController {
 
 		userRepo.deleteById(id);
 	}
+
+	@PatchMapping("/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public UserView patch(@PathVariable long id, @RequestBody User newUser) throws Exception {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
+
+		user.setName(newUser.getName());
+		userRepo.save(user);
+
+		return new UserView(user);
+	}
 }
