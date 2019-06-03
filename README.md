@@ -79,6 +79,9 @@ A transaction can either be a money transfer from one user to another, or a gene
 }
 ```
 
+### SimpleUser
+Same as [User](#user), but without ```transaction```.
+
 ## Methods
 The following methods are exposed:
 
@@ -112,6 +115,12 @@ Changes the passed user's name. Expects same JSON structure as [POST /user](#pos
 
 ### DELETE /user/{id}
 Deletes the user with the passed ID. Will throw an error if the user's balance isn't 0.
+
+### GET /user/search/{term}
+Searches for users. Returns an array of [SimpleUser](#simpleuser) elements having ```term``` in it's name.
+
+### GET /user/all
+Retrieves all users. Returns an array of [SimpleUser](#simpleuser) elements.
 
 ### POST /transaction
 Creates a new transaction. Accepts two forms of requests.

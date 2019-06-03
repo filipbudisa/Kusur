@@ -7,10 +7,7 @@ import com.filipbudisa.kusur.model.User;
 import com.filipbudisa.kusur.model.UserExpense;
 import com.filipbudisa.kusur.model.UserIncome;
 import com.filipbudisa.kusur.repository.UserRepository;
-import com.filipbudisa.kusur.view.ExpenseView;
-import com.filipbudisa.kusur.view.IncomeView;
-import com.filipbudisa.kusur.view.TransactionView;
-import com.filipbudisa.kusur.view.UserView;
+import com.filipbudisa.kusur.view.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -94,5 +91,23 @@ public class UserController {
 		userRepo.save(user);
 
 		return new UserView(user);
+	}
+
+	@GetMapping("/search/{term}")
+	@ResponseStatus(HttpStatus.OK)
+	public List<SimpleUserView> search(@PathVariable String term){
+		return userRepo.findByNameContainingIgnoreCase(term)
+			.parallelStream()
+			.map(SimpleUserView::new)
+			.collect(Collectors.toList());
+	}
+
+	@GetMapping("/all")
+	@ResponseStatus(HttpStatus.OK)
+	public List<SimpleUserView> all(){
+		return userRepo.findAll()
+				.parallelStream()
+				.map(SimpleUserView::new)
+				.collect(Collectors.toList());
 	}
 }
