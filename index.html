@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Kusur</title>
+
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+
+	<script type="text/javascript">
+		function showCard(card){
+			$(".card").hide();
+			$("#card-" + card).show();
+		}
+
+		function showNewTransaction(){
+			showCard("newtransaction");
+		}
+
+		function showNewUser(){
+			showCard("newuser");
+		}
+
+		function showSearchUsers(){
+			$("#search-results").empty();
+			showCard("search");
+		}
+
+		function fillUsers(users){
+			$("#transfer-from, #transfer-to, #income-users, #expense-users").empty();
+
+			for(var key in users){
+				if(!users.hasOwnProperty(key)) continue;
+				var user = users[key];
+
+				var $option = $("<option />").attr("value", user.id).html(user.name);
+
+				$("#transfer-from").append($option.clone());
+				$("#transfer-to").append($option.clone());
+				$("#income-users").append($option.clone());
+				$("#expense-users").append($option.clone());
+			}
+		}
+
+		function searchUsers(){
+			var term = $("#search-name").val();
+			$("#search-results").empty();
+
+			request("get", "/user/search/" + term, null, function(data){
+				for(var key in data){
+					if(!data.hasOwnProperty(key)) continue;
+					var user = data[key];
+
+					var $user = $("<a />");
+					$user.data("id", user.id);
+					$user.attr("href", "#");
+					$user.click(function(e){
+						e.preventDefault();
+						fetchUser($(this).data("id"));
+					});
+					$user.html(user.name + ": " + user.balance);
+
+					$("#search-results").append($("<li />").append($user));
+				}
+			});
+		}
+
+		function submitNewUser(){
+			var name = $("#newuser-name").val();
+			request("post", "/user", { name: name });
+		}
+
+		function fetchUsers(){
+			request("get", "/user/all", null, function(data){
+				$("#users").empty();
+
+				fillUsers(data);
+
+				for(var key in data){
+					if(!data.hasOwnProperty(key)) continue;
+					var user = data[key];
+
+					var $user = $("<a />");
+					$user.data("id", user.id);
+					$user.attr("href", "#");
+					$user.click(function(e){
+						e.preventDefault();
+						fetchUser($(this).data("id"));
+					});
+					$user.html(user.name + ": " + user.balance);
+
+					$("#users").append($("<li />").append($user));
+				}
+			});
+		}
+
+		function fetchUser(id){
+			$("#card-user").empty();
+			showCard("user");
+
+			request("get", "/user/" + id, null, function(data){
+
+				$("#card-user").append($("<h3 />").html(data.name));
+				$("#card-user").append($("<p />").html("Balance: " + data.balance));
+
+				var $nameForm = $("<form />").submit(function(e){
+					e.preventDefault();
+
+					var newName = $("#namechange").val();
+					request("patch", "/user/" + id, { name: newName });
+				});
+
+				$nameForm.append($("<input />").attr("id", "namechange").attr("type", "text"));
+				$nameForm.append($("<button />").html("Rename"));
+
+				$("#card-user").append($("<h4 />").html("Rename"));
+				$("#card-user").append($nameForm);
+
+				$("#card-user").append($("<h4 />").html("Delete user"));
+				$("#card-user").append($("<button />").html("Delete").click(function(){
+					request("delete", "/user/" + id);
+				}));
+
+				var $transactions = $("<ul />").css("list-style", "initial").css("padding-left", "20px");
+				$("#card-user").append($("<h4 />").html("Transactions"));
+				$("#card-user").append($transactions);
+
+				for(var key in data.transactions){
+					if(!data.transactions.hasOwnProperty(key)) continue;
+
+					var transaction = data.transactions[key];
+					var $transaction = $("<li />").css("float", "none");
+
+					if(transaction.type === "transfer"){
+						var $link = $("<a />").attr("href", "#").data("id", transaction.id).click(function(e){
+							e.preventDefault();
+							fetchTransaction($(this).data("id"));
+						});
+
+						var text;
+						if(transaction.income.users[0] === data.id){
+							text = "Transferred " + transaction.amount + " to user " + transaction.expense.users[0];
+						}else{
+							text = "Received " + transaction.amount + " from user " + transaction.income.users[0];
+						}
+
+						$link.html(text);
+						$transaction.append($link);
+					}else{
+						var $link = $("<a />").attr("href", "#").data("id", transaction.id).click(function(e){
+							e.preventDefault();
+							fetchTransaction($(this).data("id"));
+						});
+
+						var text = "";
+
+						if(transaction.income.distribution === "equal"
+							&& transaction.income.users.indexOf(id) !== -1){
+
+							text = "Income " + (transaction.income.amount / transaction.income.users.length)
+						}else{
+							for(var key2 in transaction.income.users){
+								if(!transaction.income.users.hasOwnProperty(key2)) continue;
+								var user = transaction.income.users[key2];
+
+								if(user.user_id === id){
+									var amount = user.value;
+
+									if(transaction.income.distribution === "percentage"){
+										amount *= transaction.income.amount / 100;
+									}
+
+									text = "Income " + amount;
+									break;
+								}
+							}
+						}
+
+						if(transaction.expense.distribution === "equal"
+							&& transaction.expense.users.indexOf(id) !== -1){
+
+							if(text !== "") text += ", ";
+							text += "Expense " + (transaction.expense.amount / transaction.expense.users.length)
+						}else{
+							for(var key2 in transaction.expense.users){
+								if(!transaction.expense.users.hasOwnProperty(key2)) continue;
+								var user = transaction.expense.users[key2];
+
+								if(user.user_id === id){
+									var amount = user.value;
+
+									if(transaction.expense.distribution === "percentage"){
+										amount *= transaction.expense.amount / 100;
+									}
+
+									if(text !== "") text += ", ";
+									text = "Expense " + amount;
+									break;
+								}
+							}
+						}
+
+						$link.html(text);
+						$transaction.append($link);
+					}
+
+					$transactions.append($transaction);
+				}
+			});
+		}
+
+		function fetchTransaction(id){
+			$("#card-transaction").empty();
+			showCard("transaction");
+
+			request("get", "/transaction/" + id, null, function(data){
+				$("#card-transaction").append($("<h3 />").html("Transaction " + id));
+				$("#card-transaction").append($("<p />").html("Amount: " + data.amount));
+
+				$("#card-transaction").append($("<h4 />").html("Income"));
+				$("#card-transaction").append($("<p />").html("Amount: " + data.income.amount + ". Distribution: " + data.income.distribution));
+
+				var $users = $("<ul />");
+				$("#card-transaction").append($users);
+
+				if(data.income.distribution === "equal"){
+					var value = data.income.amount / data.income.users.length;
+
+					for(var key in data.income.users){
+						if(!data.income.users.hasOwnProperty(key)) continue;
+						var user = data.income.users[key];
+
+						var $user = $("<a />");
+						$user.html("User ID " + user + ": " + value);
+						$user.data("id", user);
+						$user.attr("href", "#");
+						$user.click(function(e){
+							e.preventDefault();
+							fetchUser($(this).data("id"));
+						});
+
+						$users.append($("<li />").append($user));
+					}
+				}else{
+					for(var key in data.income.users){
+						if(!data.income.users.hasOwnProperty(key)) continue;
+						var user = data.income.users[key];
+
+						var value = user.value;
+						if(data.income.distribution === "percentage"){
+							value *= data.income.amount / 100;
+						}
+
+						var $user = $("<a />");
+						$user.html("User ID " + user.user_id + ": " + value);
+						$user.data("id", user.user_id);
+						$user.attr("href", "#");
+						$user.click(function(e){
+							e.preventDefault();
+							fetchUser($(this).data("id"));
+						});
+
+						$users.append($("<li />").append($user));
+					}
+				}
+
+				$("#card-transaction").append($("<h4 />").html("Expense"));
+				$("#card-transaction").append($("<p />").html("Amount: " + data.expense.amount + ". Distribution: " + data.expense.distribution));
+
+				var $users = $("<ul />");
+				$("#card-transaction").append($users);
+
+				if(data.expense.distribution === "equal"){
+					var value = data.expense.amount / data.expense.users.length;
+
+					for(var key in data.expense.users){
+						if(!data.expense.users.hasOwnProperty(key)) continue;
+						var user = data.expense.users[key];
+
+						var $user = $("<a />");
+						$user.html("User ID " + user + ": " + value);
+						$user.data("id", user);
+						$user.attr("href", "#");
+						$user.click(function(e){
+							e.preventDefault();
+							fetchUser($(this).data("id"));
+						});
+
+						$users.append($("<li />").append($user));
+					}
+				}else{
+					for(var key in data.expense.users){
+						if(!data.expense.users.hasOwnProperty(key)) continue;
+						var user = data.expense.users[key];
+
+						var value = user.value;
+						if(data.expense.distribution === "percentage"){
+							value *= data.expense.amount / 100;
+						}
+
+						var $user = $("<a />");
+						$user.html("User ID " + user.user_id + ": " + value);
+						$user.data("id", user.user_id);
+						$user.attr("href", "#");
+						$user.click(function(e){
+							e.preventDefault();
+							fetchUser($(this).data("id"));
+						});
+
+						$users.append($("<li />").append($user));
+					}
+				}
+			});
+		}
+
+		function doTransaction(){
+			var type = $("#transaction-type").val();
+			var amount = parseFloat($("#amount").val());
+
+			var data = {
+				type: type,
+				amount: amount
+			};
+
+			if(type === "transfer"){
+				data.from_user_id = $("#transfer-from").val();
+				data.to_user_id = $("#transfer-to").val();
+			}else{
+				var income = {
+					amount: amount,
+					distribution: $("#income-type").val()
+				};
+
+				var usersStr = $("#income-users").val();
+				var users = [];
+				for(var key in usersStr){
+					if(!usersStr.hasOwnProperty(key)) continue;
+					users.push(parseInt(usersStr[key]));
+				}
+
+				if(income.distribution === "equal"){
+					income.users = users;
+				}else{
+					income.users = [];
+
+					for(var key in users){
+						if(!users.hasOwnProperty(key)) continue;
+						var user = users[key];
+
+						income.users.push({
+							id: user,
+							value: parseFloat($("#income-users-values > div[data-id=" + user + "] input").val())
+						});
+					}
+				}
+
+				var expense = {
+					amount: amount,
+					distribution: $("#expense-type").val()
+				};
+
+				var usersStr = $("#expense-users").val();
+				var users = [];
+				for(var key in usersStr){
+					if(!usersStr.hasOwnProperty(key)) continue;
+					users.push(parseInt(usersStr[key]));
+				}
+
+				if(expense.distribution === "equal"){
+					expense.users = users;
+				}else{
+					expense.users = [];
+
+					for(var key in users){
+						if(!users.hasOwnProperty(key)) continue;
+						var user = users[key];
+
+						expense.users.push({
+							id: user,
+							value: parseFloat($("#expense-users-values > div[data-id=" + user + "] input").val())
+						});
+					}
+				}
+
+				data.income = income;
+				data.expense = expense;
+			}
+
+			request("post", "/transaction", data);
+		}
+
+		function request(method, path, data, callback){
+			$("#path").html(method.toUpperCase() + " " + path);
+			$("#request").html(JSON.stringify(data, null, 2));
+			$("#status").html("");
+			$("#response").html("");
+
+			var url = $("#url").val() + path;
+
+			$.ajax({
+				method: method,
+				url: url,
+				data: JSON.stringify(data),
+				dataType: "json",
+				contentType: "application/json; charset=utf-8",
+				success: function(data, status){
+					$("#status").html(status);
+					$("#response").html(JSON.stringify(data, null, 2));
+
+					if(callback){
+						callback(data);
+					}
+				},
+				error: function(xhr, status){
+					$("#status").html(status);
+					$("#response").html(JSON.stringify(xhr.responseJSON, null, 2));
+				}
+			});
+		}
+
+		$(document).ready(function(){
+			$("#transaction-type").on("change", function(){
+				$("#transaction-general, #transaction-transfer").hide();
+				$("#transaction-" + $(this).val()).show();
+			});
+
+			$("#income-users").on("change", function(){
+				if($("#income-type").val() === "equal") return;
+
+				var users = $(this).val();
+
+				$("#income-users-values > div").each(function(i, e){
+					if(users.indexOf($(e).data("id")) === -1){
+						$(e).remove();
+					}else{
+						users.splice(users.indexOf($(e).data("id")), 1);
+					}
+				});
+
+				for(var key in users){
+					if(!users.hasOwnProperty(key)) continue;
+
+					var id = users[key];
+					var name = $("#income-users option[value=" + id + "]").html();
+
+					var $div = $("<div />").attr("data-id", id);
+					$div.append($("<p />").html(name));
+					$div.append($("<input />").attr("type", "number"));
+
+					$("#income-users-values").append($div);
+				}
+			});
+
+			$("#expense-users").on("change", function(){
+				if($("#expense-type").val() === "equal") return;
+
+				var users = $(this).val();
+
+				$("#expense-users-values > div").each(function(i, e){
+					if(users.indexOf($(e).data("id")) === -1){
+						$(e).remove();
+					}else{
+						users.splice(users.indexOf($(e).data("id")), 1);
+					}
+				});
+
+				for(var key in users){
+					if(!users.hasOwnProperty(key)) continue;
+
+					var id = users[key];
+					var name = $("#expense-users option[value=" + id + "]").html();
+
+					var $div = $("<div />").attr("data-id", id);
+					$div.append($("<p />").html(name));
+					$div.append($("<input />").attr("type", "number"));
+
+					$("#expense-users-values").append($div);
+				}
+			});
+		});
+	</script>
+
+	<style>
+		html, body { height: 100%; padding: 0; margin: 0; }
+		#left, #right { width: 50%; float: left; min-height: 100%; padding: 10px; box-sizing: border-box; }
+		#right { border-left: 2px solid #000; }
+
+		h2, p { padding: 0; margin: 0; }
+		.title { padding-bottom: 20px; }
+		.minititle { padding-bottom: 10px; }
+		h3 { padding-bottom: 10px; }
+
+		ul { list-style: none; margin: 0; padding: 0; display: block; overflow: hidden; }
+			ul li { float: left; padding: 5px 10px; }
+
+		.card { display: none; clear: both; border-top: 2px solid #333; padding-top: 10px; margin-top: 10px; }
+	</style>
+</head>
+<body>
+<div id="left">
+	<input type="text" id="url" value="http://localhost:8080" style="width: 100%; box-sizing: border-box" />
+
+	<ul id="users">
+
+	</ul>
+
+	<ul id="buttons">
+		<li><button onclick="fetchUsers()">Fetch users</button></li>
+		<li><button onclick="showNewUser()">New user</button></li>
+		<li><button onclick="showSearchUsers()">Search users</button></li>
+		<li><button onclick="showNewTransaction()">New transaction</button></li>
+	</ul>
+
+	<div class="card" id="card-newuser">
+		<h3>New user</h3>
+		<form onsubmit="submitNewUser(); return false">
+			<input type="text" id="newuser-name">
+			<button>Create</button>
+		</form>
+	</div>
+
+	<div class="card" id="card-search">
+		<h3>Search users</h3>
+		<form onsubmit="searchUsers(); return false">
+			<input type="text" id="search-name">
+			<button>Search</button>
+		</form>
+		<h3>Results:</h3>
+		<ul id="search-results"></ul>
+	</div>
+
+	<div class="card" id="card-user">
+	</div>
+
+	<div class="card" id="card-transaction">
+	</div>
+
+	<div class="card" id="card-newtransaction">
+		<h3>New transaction</h3>
+
+		<div class="title">
+			<select id="transaction-type">
+				<option value="transfer">Transfer</option>
+				<option value="general">General</option>
+			</select>
+			<label for="amount">Amount</label>
+			<input type="number" id="amount" />
+		</div>
+
+		<div class="title" id="transaction-transfer">
+			<label for="transfer-from">From</label>
+			<select id="transfer-from"></select>
+
+			<label for="transfer-to">To</label>
+			<select id="transfer-to"></select>
+		</div>
+
+		<div class="title" id="transaction-general" style="display: none">
+			<h4>Income (who pays)</h4>
+
+			<div class="minititle">
+				<label for="income-type">Distribution</label>
+				<select id="income-type">
+					<option value="equal">Equal</option>
+					<option value="absolute">Absolute values</option>
+					<option value="percentage">Percentage values</option>
+				</select>
+			</div>
+
+			<select id="income-users" style="width: 150px; min-height: 200px" multiple>
+			</select>
+
+			<div style="display: inline-block; padding-left: 10px" id="income-users-values">
+			</div>
+
+			<h4>Expense</h4>
+
+			<div class="minititle">
+				<label for="expense-type">Distribution</label>
+				<select id="expense-type">
+					<option value="equal">Equal</option>
+					<option value="absolute">Absolute values</option>
+					<option value="percentage">Percentage values</option>
+				</select>
+			</div>
+
+			<select id="expense-users" style="width: 150px; min-height: 200px" multiple>
+			</select>
+
+			<div style="display: inline-block; padding-left: 10px" id="expense-users-values">
+			</div>
+		</div>
+
+		<button onclick="doTransaction()">Send</button>
+	</div>
+</div>
+
+<div id="right">
+	<h2 class="minititle">Request</h2>
+	<p id="path" class="title"></p>
+	<pre id="request" class="title"></pre>
+
+	<h2 class="minititle">Response</h2>
+	<p id="status" class="title"></p>
+	<pre id="response"></pre>
+</div>
+</body>
+</html>

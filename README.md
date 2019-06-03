@@ -1,5 +1,7 @@
-# Framework, database
+# Framework, database, GUI
 The project uses the Spring Boot framework, Spring Data JPA for data manipulation and the H2 database engine for data storage.
+
+```index.html``` is a rudimentary GUI application for testing the backend.
 
 ## Database
 By default, the data is stored in-memory, but other storage methods offered by H2 are available. Storage method and location is defined by the ```spring.datasource.url``` property in the **application.properties** file.
@@ -143,6 +145,16 @@ If the transaction is a general one, the structure is as follows:
     expense: <expense>,
     income: <income>,
 }
+```
+
+**Incomes and expenses which don't have equal distributions take *id* instead of *user_id* in the *users* array:**
+```
+users: [
+    {
+        id: 1,
+        value: 100
+    }
+]
 ```
 
 ### GET /transaction/{id}
