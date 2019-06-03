@@ -19,6 +19,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 				new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
 	}
 
+	@ExceptionHandler({ LogicException.class })
+	public ResponseEntity<Object> logicException(LogicException e, WebRequest request){
+		return handleExceptionInternal(e, new JSONRepresentation("logic", e.getMessage()),
+				new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+	}
+
 	@ExceptionHandler({ JSONException.class })
 	public ResponseEntity<Object> JSONException(JSONException e, WebRequest request){
 		return handleExceptionInternal(e, new JSONRepresentation("json", "Malformed JSON"),

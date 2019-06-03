@@ -1,5 +1,6 @@
 package com.filipbudisa.kusur.controller;
 
+import com.filipbudisa.kusur.exception.LogicException;
 import com.filipbudisa.kusur.exception.NotFoundException;
 import com.filipbudisa.kusur.model.User;
 import com.filipbudisa.kusur.model.UserExpense;
@@ -63,5 +64,17 @@ public class UserController {
 				.map(UserExpense::getExpense)
 				.map(ExpenseView::new)
 				.collect(Collectors.toList());
+	}
+
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.OK)
+	public void delete(@PathVariable long id) throws Exception {
+		User user = userRepo.findById(id).orElseThrow(() -> new NotFoundException("user", String.valueOf(id)));
+
+		if(user.getBalance() != 0){
+			throw new LogicException("User's balance isn't 0");
+		}
+
+		userRepo.deleteById(id);
 	}
 }

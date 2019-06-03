@@ -25,6 +25,7 @@ mvn test
 # REST API
 The server runs at ```localhost:8080```. All data requested and returned is in JSON format. If an error occurs, the **error** and **message** properties are set. Message contains a human readable error message, while error can be one of the following:
 * **data** - passed data is wrong. Ex. percentage sum doesn't equal 100
+* **logic** - ex. trying to delete a user who's balance doesn't equal 0
 * **json** - malformed JSON or unexpected JSON format
 * **not_found** - requested entity with passed identifier doesn't exist
 
@@ -100,6 +101,9 @@ Retrieves the users incomes. Returns an array of [income](#income--expense) obje
 
 ### GET /user/{id}/expenses
 Retrieves the users expenses. Returns an array of [expense](#income--expense) objects.
+
+### DELETE /user/{id}
+Deletes the user with the passed ID. Will throw an error if the user's balance isn't 0.
 
 ### POST /transaction
 Creates a new transaction. Accepts two forms of requests.
